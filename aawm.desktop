@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=aawm
+Comment=aaaaa windows, man
+TryExec=aawm
+Exec=aawm
+Type=Application
