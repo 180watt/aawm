@@ -116,7 +116,7 @@ struct key keys[] = {
      .keysym = XK_o,
      .function = refresh_cell,
      .arg = (args){}},
-     
+
     {.mod = MOD, .keysym = XK_p, .function = pocket_action, .arg = (args){}},
 
     /* i love hard coding values */
@@ -226,25 +226,30 @@ void swap_clients() {
 void pocket_action() {
   /* pick up if pocket is empty */
   if (focused_client && !(pocket)) {
+    /* make sure that the focused_client is in our cell */
+    if (!((cell_grid[pos.x][pos.y].primary == focused_client) ||
+          (cell_grid[pos.x][pos.y].secondary == focused_client)))
+      return;
     pocket = focused_client;
-    XUnmapWindow(display, focused_client->win);
-    if (cell_grid[pos.x][pos.y].primary == focused_client)
+    XUnmapWindow(display, pocket->win);
+    if (cell_grid[pos.x][pos.y].primary == pocket)
       cell_grid[pos.x][pos.y].primary = NULL;
-    else if (cell_grid[pos.x][pos.y].secondary == focused_client)
+    if (cell_grid[pos.x][pos.y].secondary == pocket)
       cell_grid[pos.x][pos.y].secondary = NULL;
   } else if (pocket) {
     switch (get_cell_state(&cell_grid[pos.x][pos.y])) {
       case NO_CLIENTS:
       case SECONDARY_ONLY:
         cell_grid[pos.x][pos.y].primary = pocket;
+        pocket = NULL;
         break;
       case PRIMARY_ONLY:
         cell_grid[pos.x][pos.y].secondary = pocket;
+        pocket = NULL;
         break;
       case BOTH_CLIENTS:
         return;
     }
-    pocket = NULL;
   }
 
   /* assume this happens on our current cell */
@@ -299,12 +304,6 @@ void map_cell(vec2 n_pos) {
     previous = &cell_grid[pos.x][pos.y];
   };
 
-  /*
-  if (!((prevy == current_cell_y) && (prevx == current_cell_x))) {
-    previous_cell_y = prevy;
-    previous_cell_x = prevx;
-  }
-  */
   if (previous->primary != NULL) XUnmapWindow(display, previous->primary->win);
   if (previous->secondary != NULL)
     XUnmapWindow(display, previous->secondary->win);
